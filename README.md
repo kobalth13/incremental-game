@@ -2,10 +2,10 @@
 
 Petit jeu original jouable dans un navigateur, développé progressivement.
 
-## Version actuelle — V0.2
+## Version actuelle — V0.3
 
 - Une page entièrement blanche.
-- Un bouton centré intitulé « Cliquer », dont le libellé devient « Cliqué ! » après un clic.
+- Un bouton rond (112 px) centré, avec finition métal brossé simulée en CSS, relief, ombre et effet d'enfoncement à l'appui. Son libellé passe de « Cliquer » à « Cliqué ! » après un clic.
 - Un compteur « Clics : 0 » en haut, au centre ; chaque clic l'incrémente de 1.
 - Le compteur recommence à zéro au rechargement de la page (aucune sauvegarde demandée).
 - Aucune autre mécanique, histoire, ressource ou progression n'a été décidée.
@@ -36,8 +36,6 @@ Références de départ : *Universal Paperclips*, *Crank* et *A Dark Room*, pour
 
 ## Point de reprise
 
-**État :** V0.2 en place dans le code : compteur ajouté, bouton inchangé.
-
-**Décision en attente :** finition visuelle / texture du bouton central. Aucune texture n'est appliquée tant que Pierre ne l'a pas choisie.
+**État :** V0.3 : compteur de clics centré en haut ; bouton rond effet métal brossé au centre.
 
 **Prochaine étape :** attendre la prochaine instruction de Pierre. Aucun développement supplémentaire du gameplay n'est planifié ou autorisé par déduction.
