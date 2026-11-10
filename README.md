@@ -2,11 +2,12 @@
 
 Petit jeu original jouable dans un navigateur, développé progressivement.
 
-## Version actuelle — V0.1
+## Version actuelle — V0.2
 
 - Une page entièrement blanche.
-- Un bouton centré intitulé « Cliquer ».
-- Au clic, son libellé devient « Cliqué ! ».
+- Un bouton centré intitulé « Cliquer », dont le libellé devient « Cliqué ! » après un clic.
+- Un compteur « Clics : 0 » en haut, au centre ; chaque clic l'incrémente de 1.
+- Le compteur recommence à zéro au rechargement de la page (aucune sauvegarde demandée).
 - Aucune autre mécanique, histoire, ressource ou progression n'a été décidée.
 
 **Jouer :** https://kobalth13.github.io/incremental-game/
@@ -35,6 +36,8 @@ Références de départ : *Universal Paperclips*, *Crank* et *A Dark Room*, pour
 
 ## Point de reprise
 
-**État :** V0.1 publiée ; base technique prête.
+**État :** V0.2 en place dans le code : compteur ajouté, bouton inchangé.
 
-**Prochaine étape :** attendre la prochaine instruction de Pierre. Aucun développement du gameplay n'est planifié ou autorisé par déduction.
+**Décision en attente :** finition visuelle / texture du bouton central. Aucune texture n'est appliquée tant que Pierre ne l'a pas choisie.
+
+**Prochaine étape :** attendre la prochaine instruction de Pierre. Aucun développement supplémentaire du gameplay n'est planifié ou autorisé par déduction.
