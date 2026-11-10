@@ -1,87 +1,254 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jeu — V0.3</title>
-  <style>
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      background: #fff;
-    }
-    body {
-      display: grid;
-      place-items: center;
-    }
-    #compteur {
-      position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #000;
-      font: 16px Arial, sans-serif;
-      white-space: nowrap;
-    }
-    button {
-      display: grid;
-      place-items: center;
-      width: 112px;
-      height: 112px;
-      padding: 0;
-      border: 4px solid #a7adb1;
-      border-radius: 50%;
-      color: #30343a;
-      font: 600 14px Arial, sans-serif;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
-      cursor: pointer;
-      background:
-        radial-gradient(circle at 34% 25%, rgba(255,255,255,0.72), transparent 46%),
-        repeating-radial-gradient(circle, rgba(255,255,255,0.15) 0px, rgba(255,255,255,0.15) 1px, rgba(30,36,40,0.08) 2px, rgba(30,36,40,0.08) 3px),
-        conic-gradient(from -35deg, #a7acaf, #e8ebed, #9aa1a6, #f3f5f5, #a5abae, #dce0e1, #a7acaf);
-      box-shadow:
-        inset 0 2px 4px rgba(255,255,255,0.9),
-        inset 0 -5px 8px rgba(44,52,58,0.25),
-        0 4px 9px rgba(0,0,0,0.20),
-        0 1px 2px rgba(0,0,0,0.14);
-      transition: transform 90ms ease, box-shadow 90ms ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    button:hover {
-      box-shadow:
-        inset 0 2px 4px rgba(255,255,255,0.95),
-        inset 0 -5px 8px rgba(44,52,58,0.25),
-        0 6px 12px rgba(0,0,0,0.22);
-    }
-    button:active {
-      transform: translateY(2px);
-      box-shadow:
-        inset 0 3px 9px rgba(37,43,48,0.30),
-        inset 0 -1px 3px rgba(255,255,255,0.45),
-        0 1px 3px rgba(0,0,0,0.18);
-    }
-    button:focus-visible {
-      outline: 3px solid #424950;
-      outline-offset: 5px;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      button { transition: none; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jeu navigateur — Prototype phases 1 et 2 (10-11-2026)</title>
+<style>
+  :root{font-family:Arial,Helvetica,sans-serif;color:#30343a;background:#fff}
+  *{box-sizing:border-box}
+  body{margin:0;background:#fff}
+  .game{min-height:100vh;display:flex;flex-direction:column}
+  .header{height:76px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:#f8f9fa;border-bottom:1px solid #e4e7e9}
+  .phase-block{display:flex;flex-direction:column;align-items:flex-start;gap:7px;position:relative}
+  .cheats{display:flex;align-items:center;gap:7px}
+  .cheat{border:1px solid #c9cfd3;background:#fff;color:#57636c;padding:1px 7px;border-radius:3px;font:11px Arial;cursor:pointer;min-width:25px;height:20px}
+  .cheat:disabled{color:#b9bec2;background:#f0f1f2;cursor:default}
+  .cheat:not(:disabled):hover{background:#e7edf0}
+  .dev-label{font:9px Arial;color:#849098;letter-spacing:1px}
+  .phase-line{display:flex;align-items:center;gap:5px;font-size:16px;font-weight:700}
+  .phase-hover{position:relative;border-bottom:1px dotted #77858b;cursor:help;outline-offset:3px}
+  .tooltip{display:none;position:absolute;left:0;top:calc(100% + 10px);width:270px;max-width:80vw;background:#28343e;color:#f7fafb;padding:13px 14px;border-radius:6px;box-shadow:0 7px 20px #0003;z-index:30;font:12px/1.7 Arial,sans-serif;font-weight:normal;pointer-events:none}
+  .phase-hover:hover .tooltip,.phase-hover:focus .tooltip{display:block}
+  .reset{font:11px Arial;color:#59646c;border:1px solid #cfd5d9;background:white;padding:7px 10px;border-radius:5px;cursor:pointer}
+  .reset:hover{background:#eef1f3}
+  .layout{flex:1;min-height:450px;display:grid;grid-template-columns:175px minmax(270px,1fr)245px}
+  .layout.phase1{grid-template-columns:minmax(350px,1fr)245px}
+  .layout.phase1 .left{display:none}
+  .left{padding:15px 12px;background:#fafafa;border-right:1px solid #e5e5e5}
+  .panel-title{font-size:15px;font-weight:700;margin-bottom:13px}
+  .stat{background:#fff;border:1px solid #e6e6e6;border-radius:6px;padding:10px 9px;margin-bottom:9px}
+  .stat-label{color:#68717a;font-size:11px;margin-bottom:5px}
+  .stat-value{font-size:21px;line-height:1.1;font-weight:650;font-variant-numeric:tabular-nums}
+  .center{position:relative;display:grid;place-items:center;overflow:hidden;background:#fff;cursor:pointer}
+  .arena{position:relative;width:142px;height:142px;display:grid;place-items:center}
+  .metal{position:relative;z-index:2;width:112px;height:112px;border:4px solid #a7adb1;border-radius:50%;padding:0;cursor:pointer;background:radial-gradient(circle at 34% 25%,rgba(255,255,255,.72),transparent 46%),repeating-radial-gradient(circle,rgba(255,255,255,.15) 0,rgba(255,255,255,.15) 1px,rgba(30,36,40,.08) 2px,rgba(30,36,40,.08) 3px),conic-gradient(from -35deg,#a7acaf,#e8ebed,#9aa1a6,#f3f5f5,#a5abae,#dce0e1,#a7acaf);box-shadow:inset 0 2px 4px rgba(255,255,255,.9),inset 0 -5px 8px rgba(44,52,58,.25),0 4px 9px rgba(0,0,0,.2),0 1px 2px rgba(0,0,0,.14);transition:transform 90ms ease,box-shadow 90ms ease}
+  .metal:not(:disabled):hover{box-shadow:inset 0 2px 4px rgba(255,255,255,.95),inset 0 -5px 8px rgba(44,52,58,.25),0 6px 12px rgba(0,0,0,.23)}
+  .metal:not(:disabled):active{transform:translateY(3px) scale(.98);box-shadow:inset 0 3px 10px rgba(0,0,0,.29),0 1px 2px rgba(0,0,0,.12)}
+  .metal:disabled{cursor:not-allowed;filter:grayscale(1) brightness(1.10);opacity:.67;box-shadow:inset 0 1px 8px #a1b4c1,0 1px 3px #8596a555}
+  .metal:focus-visible,.dice-rail:focus-visible,.reset:focus-visible,.cheat:focus-visible{outline:2px solid #607889;outline-offset:4px}
+  .frost{position:absolute;z-index:3;width:98px;height:98px;border-radius:50%;pointer-events:none;display:none;background:repeating-linear-gradient(128deg,transparent 0,transparent 7px,#c3e1ec42 8px,transparent 11px);border:1px solid #d0e9f2aa}
+  .phase1 .frost{display:block}
+  .ring{position:absolute;z-index:1;top:50%;left:50%;width:112px;height:112px;margin:-56px 0 0 -56px;border:2px solid #8aaac2a3;border-radius:50%;pointer-events:none;animation:ring .65s ease-out forwards}
+  .plus{position:absolute;z-index:3;top:0;left:50%;color:#617d90;font-size:19px;font-weight:700;pointer-events:none;animation:plus .75s ease-out forwards}
+  @keyframes ring{from{transform:scale(.95);opacity:.9}to{transform:scale(1.65);opacity:0}}
+  @keyframes plus{0%{transform:translate(-50%,4px);opacity:0}18%{opacity:1}100%{transform:translate(-50%,-55px);opacity:0}}
+  .dice-dock{position:absolute;left:14px;bottom:16px;display:flex;gap:8px;align-items:center;z-index:5}
+  .dice-rail{position:relative;display:flex;gap:4px;padding:4px;border:1px solid #bcc4c9;border-radius:7px;background:#f6f8f9;overflow:hidden;flex-shrink:0;cursor:pointer;box-shadow:0 1px 3px #00000016}
+  .progress{position:absolute;inset:0 auto 0 0;width:0%;background:linear-gradient(90deg,#d5e3e9,#9cbfce);opacity:.85;pointer-events:none}
+  .die{z-index:1;position:relative;width:29px;height:29px;display:grid;place-items:center;border:1px solid #b5bbc0;border-radius:4px;background:linear-gradient(145deg,#fff,#e3e7e9);box-shadow:inset 0 1px 1px white,0 2px 3px #0002;font:25px/1 Arial;color:#37454e;transition:opacity .15s,filter .15s}
+  .dice-rail.cooldown .die{filter:grayscale(1);opacity:.43}
+  .die.rolling{animation:dice-roll .13s linear infinite alternate}
+  @keyframes dice-roll{from{transform:translateY(-4px) rotate(-13deg)}to{transform:translateY(3px) rotate(14deg)}}
+  .cool-label{font-size:11px;color:#626f79;white-space:nowrap;font-variant-numeric:tabular-nums;min-width:43px}
+  .cool-label.ready{color:#426958;font-weight:600}
+  .right{display:flex;flex-direction:column;min-height:0;background:#fcfcfc;border-left:1px solid #e5e5e5}
+  .journal-head{font-size:15px;font-weight:700;padding:12px 11px 9px;border-bottom:1px solid #e5e5e5}
+  .filters{display:flex;align-items:center;gap:15px;padding:8px 10px;border-bottom:1px solid #e7e9eb;background:#f8f9fa}
+  .filter-label{display:flex;align-items:center;gap:5px;font-size:11px;color:#4a565f;cursor:pointer;user-select:none}
+  .filter-label input{width:13px;height:13px;margin:0;accent-color:#647b8a;cursor:pointer}
+  .journal{flex:1;min-height:0;overflow-y:auto;padding:7px 6px;display:flex;flex-direction:column;gap:2px;align-items:stretch}
+  .entry{font-size:10px;line-height:1.35;white-space:nowrap;padding:4px 5px;color:#424c55;background:#fff;border-bottom:1px solid #ececec;font-variant-numeric:tabular-nums}
+  .entry[data-kind="dice"]{color:#506779}
+  .entry[data-kind="system"]{white-space:normal;color:#566777;background:#edf3f6;border:1px solid #dce8ee;border-radius:4px;margin-bottom:6px}
+  .entry.success{color:#287352;background:#edf8f1;font-weight:600}
+  .entry[hidden]{display:none!important}
+  @media(max-width:650px){.layout{grid-template-columns:125px minmax(230px,1fr)210px;overflow-x:auto}.layout.phase1{grid-template-columns:minmax(280px,1fr)210px}.game{min-width:500px}.left{padding:12px 8px}.dice-dock{left:6px}.die{width:25px;height:25px;font-size:22px}}
+  @media(prefers-reduced-motion:reduce){.ring,.plus,.die.rolling{animation-duration:.15s}.metal{transition:none}}
+</style>
 </head>
 <body>
-  <div id="compteur" aria-live="polite">Clics : 0</div>
-  <button id="bouton" type="button">Cliquer</button>
-  <script>
-    let clics = 0;
-    const compteur = document.getElementById("compteur");
-    document.getElementById("bouton").addEventListener("click", function () {
-      clics += 1;
-      compteur.textContent = "Clics : " + clics;
-      this.textContent = "Cliqué !";
-    });
-  </script>
+<div class="game">
+  <header class="header">
+    <div class="phase-block">
+      <div class="cheats">
+        <button class="cheat" type="button" id="prev" disabled title="Phase précédente">◀</button>
+        <span class="dev-label">TRICHE</span>
+        <button class="cheat" type="button" id="next" title="Phase suivante">▶</button>
+      </div>
+      <div class="phase-line">
+        <span class="phase-hover" tabindex="0"><span id="phase-number">Phase 1</span><span class="tooltip" id="tooltip"></span></span>
+        <span id="phase-name">: le commencement</span>
+      </div>
+    </div>
+    <button class="reset" type="button" id="reset">↻ Recommencer</button>
+  </header>
+  <div class="layout phase1" id="layout">
+    <aside class="left">
+      <div class="panel-title">Informations</div>
+      <div class="stat"><div class="stat-label">Clics effectués à ce jour</div><div class="stat-value" id="total">0</div></div>
+      <div class="stat"><div class="stat-label">Clics / sec</div><div class="stat-value" id="cps">0,0</div></div>
+      <div class="stat"><div class="stat-label">Chance de coup critique</div><div class="stat-value">0 %</div></div>
+      <div class="stat"><div class="stat-label">Dégâts de coup critique</div><div class="stat-value">—</div></div>
+    </aside>
+    <main class="center" id="center" aria-label="Zone de jeu, lancer les dés">
+      <div class="arena" id="arena"><button type="button" class="metal" id="button" disabled aria-label="Bouton central gelé"></button><div class="frost" aria-hidden="true"></div></div>
+      <div class="dice-dock">
+        <button type="button" class="dice-rail" id="dice-rail" aria-label="Lancer cinq dés à six faces"><span class="progress" id="progress"></span><span class="die">⚀</span><span class="die">⚀</span><span class="die">⚀</span><span class="die">⚀</span><span class="die">⚀</span></button>
+        <span class="cool-label ready" id="cooldown">Prêts</span>
+      </div>
+    </main>
+    <aside class="right">
+      <div class="journal-head">Journal</div>
+      <div class="filters">
+        <label class="filter-label"><input type="checkbox" id="show-clicks" checked> Clics</label>
+        <label class="filter-label"><input type="checkbox" id="show-dice" checked> Dés</label>
+      </div>
+      <div class="journal" id="journal" role="log" aria-live="off"></div>
+    </aside>
+  </div>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const button = $('button'), center = $('center'), arena = $('arena');
+  const layout = $('layout'), rail = $('dice-rail'), progress = $('progress'), cool = $('cooldown');
+  const journal = $('journal'), total = $('total'), cps = $('cps');
+  const previous = $('prev'), next = $('next'), phaseNumber = $('phase-number'), phaseName = $('phase-name'), tooltip = $('tooltip');
+  const showClicks = $('show-clicks'), showDice = $('show-dice');
+  const dice = [...rail.querySelectorAll('.die')], faces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+  const cooldownMs = 10000;
+  let phase = 1, clicks = 0, clickTimes = [], readyAt = 0, rollTimer = null, rollToken = 0;
+
+  function clock() {
+    return new Date().toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+  }
+  function isVisible(kind) {
+    return kind === 'click' ? showClicks.checked : kind === 'dice' ? showDice.checked : true;
+  }
+  function log(text, kind = 'system', success = false, omitTime = false) {
+    const entry = document.createElement('div');
+    entry.className = 'entry' + (success ? ' success' : '');
+    entry.dataset.kind = kind;
+    entry.textContent = (omitTime ? '' : clock() + ' ') + text;
+    entry.hidden = !isVisible(kind);
+    journal.appendChild(entry);
+    if (!entry.hidden) journal.scrollTop = journal.scrollHeight;
+  }
+  function applyFilters() {
+    journal.querySelectorAll('.entry').forEach(e => e.hidden = !isVisible(e.dataset.kind));
+    journal.scrollTop = journal.scrollHeight;
+  }
+  showClicks.addEventListener('change', applyFilters);
+  showDice.addEventListener('change', applyFilters);
+
+  function updateRate() {
+    const t = performance.now();
+    clickTimes = clickTimes.filter(x => t - x < 1000);
+    cps.textContent = clickTimes.length.toFixed(1).replace('.', ',');
+  }
+  function updateCooldown() {
+    const remaining = Math.max(0, readyAt - performance.now());
+    if (!remaining) {
+      readyAt = 0;
+      rail.classList.remove('cooldown');
+      progress.style.width = '0%';
+      cool.textContent = 'Prêts';
+      cool.classList.add('ready');
+    } else {
+      rail.classList.add('cooldown');
+      progress.style.width = Math.max(0, Math.min(100, 100 * (1 - remaining / cooldownMs))) + '%';
+      cool.textContent = (remaining / 1000).toFixed(1).replace('.', ',') + ' s';
+      cool.classList.remove('ready');
+    }
+  }
+  function setPhase(n, origin = '') {
+    const p = Math.max(1, Math.min(2, n));
+    if (p === phase && origin !== 'init') return;
+    phase = p;
+    layout.classList.toggle('phase1', phase === 1);
+    button.disabled = phase === 1;
+    button.setAttribute('aria-label', phase === 1 ? 'Bouton central gelé' : 'Effectuer un clic');
+    phaseNumber.textContent = 'Phase ' + phase;
+    phaseName.textContent = phase === 1 ? ': le commencement' : ': l’éveil';
+    previous.disabled = phase === 1;
+    next.disabled = phase === 2;
+    tooltip.innerHTML = phase === 1
+      ? '<strong>Phase 1 — Le commencement</strong><div>Informations : masquées</div><div>Bouton : gelé</div><div>Objectif : brelan ou combinaison supérieure</div><div>Dés : 10 secondes entre deux lancers</div>'
+      : '<strong>Phase 2 — L’éveil</strong><div>Informations : visibles</div><div>Bouton : débloqué</div><div>Dés : 10 secondes entre deux lancers</div><div>Objectif suivant : non défini</div>';
+    if (origin === 'cheat') log('Triche : phase ' + phase);
+    if (origin === 'dice') log('Phase 2 débloquée !', 'system', true);
+  }
+  function combination(values) {
+    const counts = Array(7).fill(0);
+    values.forEach(v => counts[v]++);
+    const max = Math.max(...counts);
+    if (max === 5) return 'Cinq identiques';
+    if (max === 4) return 'Carré';
+    if (max === 3 && counts.includes(2)) return 'Full';
+    if (max === 3) return 'Brelan';
+    const unique = [...new Set(values)].sort((a,b) => a-b).join(',');
+    if (unique === '1,2,3,4,5' || unique === '2,3,4,5,6') return 'Suite';
+    if (counts.filter(c => c === 2).length === 2) return 'Double paire';
+    if (max === 2) return 'Paire';
+    return 'Aucune combinaison';
+  }
+  function isWinning(name) {return ['Brelan','Full','Carré','Cinq identiques','Suite'].includes(name);}
+  function rollDice() {
+    if (readyAt > performance.now()) return;
+    readyAt = performance.now() + cooldownMs;
+    updateCooldown();
+    const token = ++rollToken;
+    if (rollTimer !== null) clearInterval(rollTimer);
+    const result = dice.map(() => Math.floor(Math.random() * 6) + 1);
+    let frame = 0;
+    dice.forEach(d => d.classList.add('rolling'));
+    rollTimer = setInterval(() => {
+      if (token !== rollToken) {clearInterval(rollTimer); return;}
+      const displayValues = frame < 9 ? dice.map(() => Math.floor(Math.random() * 6) + 1) : result;
+      dice.forEach((d,i) => d.textContent = faces[displayValues[i]-1]);
+      if (++frame >= 10) {
+        clearInterval(rollTimer); rollTimer = null;
+        dice.forEach(d => d.classList.remove('rolling'));
+        const hand = combination(result);
+        log('Dés : ' + result.join('-') + ' — ' + hand, 'dice', isWinning(hand));
+        if (phase === 1 && isWinning(hand)) setPhase(2, 'dice');
+      }
+    }, 65);
+  }
+  function clickEffect() {
+    const ring = document.createElement('span'); ring.className = 'ring';
+    const plus = document.createElement('span'); plus.className = 'plus'; plus.textContent = '+1';
+    arena.append(ring, plus);
+    ring.addEventListener('animationend', () => ring.remove(), {once:true});
+    plus.addEventListener('animationend', () => plus.remove(), {once:true});
+  }
+  button.addEventListener('click', () => {
+    if (phase !== 2) return;
+    clicks++;
+    clickTimes.push(performance.now());
+    total.textContent = clicks.toLocaleString('fr-BE');
+    updateRate();
+    clickEffect();
+    log('+1 clic (' + clicks + ')', 'click');
+  });
+  center.addEventListener('click', rollDice);
+  previous.addEventListener('click', () => setPhase(phase - 1, 'cheat'));
+  next.addEventListener('click', () => setPhase(phase + 1, 'cheat'));
+  $('reset').addEventListener('click', () => {
+    clicks = 0; clickTimes = []; readyAt = 0; rollToken++;
+    if (rollTimer !== null) {clearInterval(rollTimer); rollTimer = null;}
+    dice.forEach(d => {d.textContent = faces[0]; d.classList.remove('rolling');});
+    arena.querySelectorAll('.ring,.plus').forEach(e => e.remove());
+    total.textContent = '0'; cps.textContent = '0,0';
+    journal.replaceChildren();
+    setPhase(1, 'init'); updateCooldown();
+    log('Lancez les dés jusqu’à obtenir un brelan ou mieux pour débloquer la phase 2.', 'system', false, true);
+  });
+  setPhase(1, 'init');
+  log('Lancez les dés jusqu’à obtenir un brelan ou mieux pour débloquer la phase 2.', 'system', false, true);
+  setInterval(() => {updateRate(); updateCooldown();}, 100);
+})();
+</script>
 </body>
 </html>
