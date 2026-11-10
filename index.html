@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jeu — V0.1</title>
+  <title>Jeu — V0.2</title>
   <style>
     html, body {
       margin: 0;
@@ -14,6 +14,15 @@
     body {
       display: grid;
       place-items: center;
+    }
+    #compteur {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #000;
+      font: 16px Arial, sans-serif;
+      white-space: nowrap;
     }
     button {
       padding: 3px 10px;
@@ -27,9 +36,14 @@
   </style>
 </head>
 <body>
+  <div id="compteur" aria-live="polite">Clics : 0</div>
   <button id="bouton" type="button">Cliquer</button>
   <script>
+    let clics = 0;
+    const compteur = document.getElementById("compteur");
     document.getElementById("bouton").addEventListener("click", function () {
+      clics += 1;
+      compteur.textContent = "Clics : " + clics;
       this.textContent = "Cliqué !";
     });
   </script>
