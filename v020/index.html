@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jeu incrémental V0.20</title>
+<style>body{background:#12100e;color:#f5e6cd;font:16px system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;margin:0;text-align:center}main{padding:30px}small{color:#c6aa81}#err{white-space:pre-wrap;color:#ffc5a8}</style></head>
+<body><main><h2>Jeu incrémental · V0.20</h2><p id="status">Chargement des décors et de la partie…</p><small>Les graphismes sont chargés une seule fois par ouverture.</small><p id="err"></p></main>
+<script>
+(async()=>{
+ const counts=[6,4,1,5,6,5,5,1,1,5,5];
+ const status=document.getElementById('status');
+ try{
+  const load=async(path)=>{const response=await fetch(path);if(!response.ok)throw Error('Fichier indisponible: '+path+' ('+response.status+')');return response.text()};
+  const templatePromise=load('app.template.html');
+  let completed=0;
+  const images=await Promise.all(counts.map(async(n,i)=>{
+   const code=String(i).padStart(2,'0');
+   const paths=(i===2)?['assets/02.b64']:Array.from({length:n},(_,j)=>'assets/'+code+'-'+String(j).padStart(2,'0')+'.b64');
+   const chunks=await Promise.all(paths.map(load));
+   status.textContent='Chargement des décors : '+(++completed)+' / '+counts.length;
+   return 'data:image/png;base64,'+chunks.join('');
+  }));
+  let html=await templatePromise;
+  for(let i=0;i<images.length;i++)html=html.replace('@@ASSET_'+i+'@@',images[i]);
+  if(html.includes('@@ASSET_'))throw Error('Ressource non remplacée');
+  document.open();document.write(html);document.close();
+ }catch(error){status.textContent='Impossible de charger le jeu';document.getElementById('err').textContent=error.message}
+})();
+</script></body></html>
